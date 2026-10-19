@@ -1,55 +1,147 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Playlist MP3</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Form Kirim Pesan</title>
 
-<h2 id="judul">Memuat...</h2>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-<audio id="player" controls></audio>
+      body {
+        margin: 0;
+        padding: 30px 16px;
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: white;
+      }
 
-<script>
+      form {
+        max-width: 480px;
+        margin: 30px auto;
+        padding: 24px;
+        background: #1e293b;
+        border-radius: 16px;
+      }
 
-let playlist = [];
-let current = 0;
+      h1 {
+        font-size: 24px;
+      }
 
-const player = document.getElementById("player");
-const judul = document.getElementById("judul");
+      label {
+        display: block;
+        margin: 18px 0 8px;
+      }
 
-function loadPlaylist(data){
+      input,
+      textarea,
+      button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font: inherit;
+      }
 
-  console.log(data);
+      input,
+      textarea {
+        border: 1px solid #475569;
+        background: #0f172a;
+        color: white;
+      }
 
-  playlist = data;
+      button {
+        margin-top: 20px;
+        border: 0;
+        background: #4e95ff;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+      }
 
-  if(playlist.length > 0){
-    playSong(0);
-  }
-}
+      button:disabled {
+        opacity: 0.6;
+      }
 
-function playSong(index){
+      #hasil {
+        margin-top: 16px;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
 
-  player.src = playlist[index].url;
-  judul.textContent = playlist[index].judul;
-}
+  <body>
+    <form id="form">
+      <h1>Kirim Pesan</h1>
+      <p>Kirim teks dan gambar ke server.</p>
 
-player.addEventListener("ended", () => {
+      <label for="nama">Nama</label>
+      <input id="nama" name="nama" maxlength="100" required />
 
-  current++;
+      <label for="pesan">Pesan</label>
+      <textarea
+        id="pesan"
+        name="pesan"
+        maxlength="3000"
+        rows="5"
+        required
+      ></textarea>
 
-  if(current >= playlist.length){
-    current = 0;
-  }
+      <label for="gambar">Gambar (maks. 5 MB)</label>
+      <input
+        id="gambar"
+        name="gambar"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+      />
 
-  playSong(current);
-  player.play();
-});
+      <button id="kirim" type="submit">Kirim</button>
+      <p id="hasil" role="status"></p>
+    </form>
 
-</script>
+    <script>
+      // Ganti dengan URL tunnel Fedora setelah tersedia.
+      const API_URL =
+        " https://programme-treating-assists-cite.trycloudflare.com";
 
-<script src="https://script.google.com/macros/s/AKfycbwrIolxSENyKC_dQvE-pf1sdk1XOAI-SnxczkcMUAUOs20-rAIFm8Jv_XFdAvw-r7c/exec?callback=loadPlaylist"></script>
+      const form = document.getElementById("form");
+      const hasil = document.getElementById("hasil");
+      const tombol = document.getElementById("kirim");
 
-</body>
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const gambar = document.getElementById("gambar").files[0];
+
+        if (gambar && gambar.size > 5 * 1024 * 1024) {
+          hasil.textContent = "Gambar maksimal 5 MB.";
+          return;
+        }
+
+        const data = new FormData(form);
+
+        tombol.disabled = true;
+        hasil.textContent = "Mengirim...";
+
+        try {
+          const response = await fetch(`${API_URL}/api/kirim`, {
+            method: "POST",
+            body: data,
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) throw new Error(result.pesan);
+
+          hasil.textContent = result.pesan;
+          form.reset();
+        } catch (error) {
+          hasil.textContent = "Gagal mengirim: " + error.message;
+        } finally {
+          tombol.disabled = false;
+        }
+      });
+    </script>
+  </body>
 </html>
